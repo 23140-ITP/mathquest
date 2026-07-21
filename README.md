@@ -19,6 +19,8 @@ npm test
 ## Controls
 
 - Mouse, touch, and keyboard work throughout.
+- **Start Adventure** plays the sequential 20-level campaign.
+- **Judge Showcase** samples one challenge from each realm without changing saved campaign progress.
 - Coordinate levels support the arrow keys or on-screen direction pad.
 - Sound and animation can be disabled from the header.
 - Progress and stars are saved in the browser with `localStorage`.

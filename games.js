@@ -103,6 +103,10 @@ export function completeLevel(progress, levelId, stars) {
   };
 }
 
+export function completionForMode(progress, levelId, stars, isShowcase = false) {
+  return isShowcase ? normalizeProgress(progress) : completeLevel(progress, levelId, stars);
+}
+
 export function totalStars(progress) {
   return Object.values(normalizeProgress(progress).starsByLevel).reduce((sum, stars) => sum + stars, 0);
 }

@@ -33,11 +33,13 @@ export const WORLDS = [
   },
 ];
 
+export const SHOWCASE_LEVEL_IDS = ["algebra-2", "geometry-2", "coordinates-2", "probability-3"];
+
 export const LEVELS = [
   {
     id: "algebra-1", worldId: "algebra", number: 1, title: "The First Lock",
     prompt: "The lock reads x + 7 = 12. What is x?",
-    interaction: "numeric", answer: 5,
+    interaction: "numeric", answer: 5, skill: "One-step equations",
     hint: "Undo the +7 by subtracting 7 from both sides.",
     explanation: "x = 5 because 5 + 7 = 12.",
     scene: { icon: "lock", formula: "x + 7 = 12" },
@@ -45,7 +47,7 @@ export const LEVELS = [
   {
     id: "algebra-2", worldId: "algebra", number: 2, title: "The Double Gate",
     prompt: "A second gate reads 3x + 5 = 20. Find x.",
-    interaction: "numeric", answer: 5,
+    interaction: "numeric", answer: 5, skill: "Two-step equations",
     hint: "Subtract 5 first, then divide the result by 3.",
     explanation: "3x = 15, so x = 5.",
     scene: { icon: "gate", formula: "3x + 5 = 20" },
@@ -53,7 +55,7 @@ export const LEVELS = [
   {
     id: "algebra-3", worldId: "algebra", number: 3, title: "Mirror Equation",
     prompt: "Two mirrors show 5x − 3 = 2x + 12. Find x.",
-    interaction: "numeric", answer: 5,
+    interaction: "numeric", answer: 5, skill: "Variables on both sides",
     hint: "Move 2x to the left and −3 to the right.",
     explanation: "3x = 15, so x = 5.",
     scene: { icon: "mirror", formula: "5x − 3 = 2x + 12" },
@@ -61,7 +63,7 @@ export const LEVELS = [
   {
     id: "algebra-4", worldId: "algebra", number: 4, title: "Twin Keys",
     prompt: "Which pair unlocks x² − 5x + 6 = 0?",
-    interaction: "choice", answer: "two-three",
+    interaction: "choice", answer: "two-three", skill: "Quadratic roots",
     choices: [
       { id: "one-six", label: "x = 1 and x = 6" },
       { id: "two-three", label: "x = 2 and x = 3" },
@@ -75,7 +77,7 @@ export const LEVELS = [
   {
     id: "algebra-5", worldId: "algebra", number: 5, title: "The Vault Code",
     prompt: "Six equal-price tickets plus a 3-coin fee cost 45 coins. What is each ticket price?",
-    interaction: "numeric", answer: 7,
+    interaction: "numeric", answer: 7, skill: "Equation modelling",
     hint: "Write 6x + 3 = 45, then remove the fee.",
     explanation: "6x + 3 = 45, so 6x = 42 and each ticket costs 7 coins.",
     scene: { icon: "vault", formula: "6x + 3 = 45" },
@@ -84,7 +86,7 @@ export const LEVELS = [
   {
     id: "geometry-1", worldId: "geometry", number: 1, title: "Broken Rampart",
     prompt: "Angles on a straight wall total 180°. One angle is 125°. Find the missing angle.",
-    interaction: "numeric", answer: 55,
+    interaction: "numeric", answer: 55, skill: "Supplementary angles",
     hint: "Subtract the known angle from 180°.",
     explanation: "180° − 125° = 55°.",
     scene: { icon: "angle", formula: "125° + ? = 180°" },
@@ -92,7 +94,7 @@ export const LEVELS = [
   {
     id: "geometry-2", worldId: "geometry", number: 2, title: "Triangle Shield",
     prompt: "A triangular shield has angles 48° and 65°. Find its third angle.",
-    interaction: "numeric", answer: 67,
+    interaction: "numeric", answer: 67, skill: "Triangle angle sum",
     hint: "The interior angles of every triangle add to 180°.",
     explanation: "180° − 48° − 65° = 67°.",
     scene: { icon: "triangle", formula: "48° + 65° + ? = 180°" },
@@ -100,7 +102,7 @@ export const LEVELS = [
   {
     id: "geometry-3", worldId: "geometry", number: 3, title: "Outer Wall",
     prompt: "The two opposite interior angles are 58° and 65°. Find the exterior angle.",
-    interaction: "numeric", answer: 123,
+    interaction: "numeric", answer: 123, skill: "Exterior angles",
     hint: "An exterior angle equals the sum of the two opposite interior angles.",
     explanation: "58° + 65° = 123°.",
     scene: { icon: "exterior", formula: "58° + 65° = ?" },
@@ -108,7 +110,7 @@ export const LEVELS = [
   {
     id: "geometry-4", worldId: "geometry", number: 4, title: "Tower Range",
     prompt: "A right triangle has shorter sides 6 m and 8 m. Find the hypotenuse.",
-    interaction: "numeric", answer: 10,
+    interaction: "numeric", answer: 10, skill: "Pythagorean theorem",
     hint: "Use a² + b² = c².",
     explanation: "6² + 8² = 36 + 64 = 100, so c = 10 m.",
     scene: { icon: "right-triangle", formula: "6² + 8² = c²" },
@@ -116,7 +118,7 @@ export const LEVELS = [
   {
     id: "geometry-5", worldId: "geometry", number: 5, title: "Shadow Signal",
     prompt: "A 2 m statue casts a 3 m shadow. At the same time, a tower casts a 22.5 m shadow. How tall is the tower?",
-    interaction: "numeric", answer: 15,
+    interaction: "numeric", answer: 15, skill: "Similar triangles",
     hint: "The height-to-shadow ratios are equal: 2/3 = h/22.5.",
     explanation: "h = 22.5 × 2 ÷ 3 = 15 m.",
     scene: { icon: "similar", formula: "2 / 3 = h / 22.5" },
@@ -125,7 +127,7 @@ export const LEVELS = [
   {
     id: "coordinates-1", worldId: "coordinates", number: 1, title: "Quadrant Compass",
     prompt: "The compass marks the point (−4, 3). Which quadrant contains it?",
-    interaction: "choice", answer: "q2",
+    interaction: "choice", answer: "q2", skill: "Coordinate quadrants",
     choices: [
       { id: "q1", label: "Quadrant I" },
       { id: "q2", label: "Quadrant II" },
@@ -139,7 +141,7 @@ export const LEVELS = [
   {
     id: "coordinates-2", worldId: "coordinates", number: 2, title: "Chart the Cove",
     prompt: "Move the explorer from (0, 0) to the hidden cove at (3, 2).",
-    interaction: "coordinate", answer: { x: 3, y: 2 }, start: { x: 0, y: 0 },
+    interaction: "coordinate", answer: { x: 3, y: 2 }, start: { x: 0, y: 0 }, skill: "Plotting coordinates",
     hint: "Move 3 spaces right and 2 spaces up.",
     explanation: "The cove is at x = 3, y = 2.",
     scene: { icon: "grid", point: [3, 2], formula: "Target: (3, 2)" },
@@ -147,7 +149,7 @@ export const LEVELS = [
   {
     id: "coordinates-3", worldId: "coordinates", number: 3, title: "Mirror Lagoon",
     prompt: "Reflect (2, −3) across the x-axis, then move to the reflected point.",
-    interaction: "coordinate", answer: { x: 2, y: 3 }, start: { x: 2, y: -3 },
+    interaction: "coordinate", answer: { x: 2, y: 3 }, start: { x: 2, y: -3 }, skill: "Reflection across an axis",
     hint: "Across the x-axis, x stays the same and y changes sign.",
     explanation: "The reflection of (2, −3) across the x-axis is (2, 3).",
     scene: { icon: "grid", point: [2, -3], formula: "(2, −3) → (?, ?)" },
@@ -155,7 +157,7 @@ export const LEVELS = [
   {
     id: "coordinates-4", worldId: "coordinates", number: 4, title: "Wind Vector",
     prompt: "Start at (−2, 1). A wind vector moves you (+4, +3). Move to the new point.",
-    interaction: "coordinate", answer: { x: 2, y: 4 }, start: { x: -2, y: 1 },
+    interaction: "coordinate", answer: { x: 2, y: 4 }, start: { x: -2, y: 1 }, skill: "Vector translation",
     hint: "Add 4 to x and 3 to y.",
     explanation: "(−2 + 4, 1 + 3) = (2, 4).",
     scene: { icon: "grid", point: [-2, 1], formula: "(−2, 1) + (4, 3)" },
@@ -163,7 +165,7 @@ export const LEVELS = [
   {
     id: "coordinates-5", worldId: "coordinates", number: 5, title: "Treasure Midpoint",
     prompt: "The treasure lies halfway between (−4, −2) and (4, 4). Move to the midpoint.",
-    interaction: "coordinate", answer: { x: 0, y: 1 }, start: { x: -4, y: -2 },
+    interaction: "coordinate", answer: { x: 0, y: 1 }, start: { x: -4, y: -2 }, skill: "Finding a midpoint",
     hint: "Average the two x-values, then average the two y-values.",
     explanation: "((−4 + 4)/2, (−2 + 4)/2) = (0, 1).",
     scene: { icon: "grid", point: [0, 1], formula: "Midpoint = (?, ?)" },
@@ -172,7 +174,7 @@ export const LEVELS = [
   {
     id: "probability-1", worldId: "probability", number: 1, title: "The Six-Sided Door",
     prompt: "A fair die is rolled. What is the probability of rolling a 4?",
-    interaction: "choice", answer: "one-sixth",
+    interaction: "choice", answer: "one-sixth", skill: "Single-event probability",
     choices: [
       { id: "one-sixth", label: "1/6" },
       { id: "one-fourth", label: "1/4" },
@@ -186,7 +188,7 @@ export const LEVELS = [
   {
     id: "probability-2", worldId: "probability", number: 2, title: "Coin Corridor",
     prompt: "Two fair coins are tossed. What is the probability of getting two heads?",
-    interaction: "choice", answer: "one-fourth",
+    interaction: "choice", answer: "one-fourth", skill: "Sample spaces",
     choices: [
       { id: "one-fourth", label: "1/4" },
       { id: "one-third", label: "1/3" },
@@ -200,7 +202,7 @@ export const LEVELS = [
   {
     id: "probability-3", worldId: "probability", number: 3, title: "Crystal Bag",
     prompt: "A bag holds 3 blue and 5 red crystals. What is the probability of drawing blue?",
-    interaction: "choice", answer: "three-eighths",
+    interaction: "choice", answer: "three-eighths", skill: "Favourable outcomes",
     choices: [
       { id: "three-fifths", label: "3/5" },
       { id: "three-eighths", label: "3/8" },
@@ -214,7 +216,7 @@ export const LEVELS = [
   {
     id: "probability-4", worldId: "probability", number: 4, title: "Choose a Door",
     prompt: "Door A opens if one coin lands heads. Door B opens if a die shows 5 or 6. Which door is more likely to open?",
-    interaction: "choice", answer: "door-a",
+    interaction: "choice", answer: "door-a", skill: "Comparing probabilities",
     choices: [
       { id: "door-a", label: "Door A: probability 1/2" },
       { id: "door-b", label: "Door B: probability 1/3" },
@@ -227,7 +229,7 @@ export const LEVELS = [
   {
     id: "probability-5", worldId: "probability", number: 5, title: "Keeper of Chance",
     prompt: "A fair four-color spinner has one blue section. In 40 trials, blue appeared 14 times. Which statement is correct?",
-    interaction: "choice", answer: "both",
+    interaction: "choice", answer: "both", skill: "Theory vs experiment",
     choices: [
       { id: "theory-only", label: "The theoretical probability is 14/40" },
       { id: "experiment-only", label: "The experimental probability is 1/4" },

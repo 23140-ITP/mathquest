@@ -1,6 +1,6 @@
-import { LEVELS, WORLDS, levelById, levelsForWorld, worldById } from "./levels.js";
+import { LEVELS, SHOWCASE_LEVEL_IDS, WORLDS, levelById, levelsForWorld, worldById } from "./levels.js";
 import {
-  completeLevel,
+  completionForMode,
   createDefaultProgress,
   isGameComplete,
   isLevelUnlocked,
@@ -16,13 +16,16 @@ const app = document.querySelector("#app");
 const announcer = document.querySelector("#announcer");
 
 let progress = loadProgress(window.localStorage);
-let view = "map";
+let view = progress.completedLevelIds.length ? "map" : "welcome";
 let currentLevelId = suggestedLevelId();
 let attempts = 0;
 let selectedChoice = "";
 let coordinatePosition = { x: 0, y: 0 };
 let feedback = null;
 let audioContext = null;
+let showcaseMode = false;
+let showcaseIndex = 0;
+let campaignLevelIdBeforeShowcase = currentLevelId;
 
 function suggestedLevelId() {
   return LEVELS.find((level) => isLevelUnlocked(level.id, progress.completedLevelIds) && !progress.completedLevelIds.includes(level.id))?.id
@@ -74,6 +77,7 @@ function icon(name, className = "") {
 }
 
 function header() {
+  const showReset = !showcaseMode && view !== "showcase";
   return `
     <header class="topbar">
       <button class="brand" data-action="go-map" aria-label="Return to world map">
@@ -90,11 +94,17 @@ function header() {
         <button class="icon-button" data-action="toggle-motion" aria-pressed="${!progress.reducedMotion}" title="Toggle motion">
           ${icon("motion")}<span>Motion</span><b>${progress.reducedMotion ? "Off" : "On"}</b>
         </button>
-        <button class="icon-button reset-button" data-action="reset" title="Reset adventure">
-          ${icon("reset")}<span>Reset</span>
-        </button>
+        ${showReset ? `<button class="icon-button reset-button" data-action="reset" title="Reset adventure">${icon("reset")}<span>Reset</span></button>` : ""}
       </div>
     </header>`;
+}
+
+function showcaseBanner() {
+  if (!showcaseMode) return "";
+  return `<aside class="showcase-banner" aria-label="Judge showcase mode">
+    <strong>Judge Showcase</strong><span>Four sample challenges · Campaign progress is not saved</span>
+    <button data-action="exit-showcase">Exit showcase</button>
+  </aside>`;
 }
 
 function realmArt(worldId) {
@@ -126,6 +136,43 @@ function realmArt(worldId) {
   </svg>`;
 }
 
+function welcomeScreen() {
+  return `${header()}<main id="main" class="welcome-shell" tabindex="-1">
+    <section class="welcome-hero">
+      <div class="welcome-copy">
+        <h1>Turn difficult maths into an adventure.</h1>
+        <p>Restore four magical realms through 20 Class 9–10 challenges. Every wrong answer reveals a useful clue, every success builds visible mastery, and progress stays safely on this device.</p>
+        <div class="welcome-actions">
+          <button class="primary-button" data-action="start-adventure">Start adventure ${icon("arrow")}</button>
+          <button class="secondary-button" data-action="open-showcase">Judge showcase</button>
+        </div>
+        <ul class="welcome-proof" aria-label="Game features">
+          <li><strong>4</strong><span>maths realms</span></li>
+          <li><strong>20</strong><span>handcrafted levels</span></li>
+          <li><strong>0</strong><span>APIs or logins</span></li>
+        </ul>
+      </div>
+      <div class="welcome-realms" aria-label="The four mathematical realms">
+        ${WORLDS.map((world) => `<article style="--realm:${world.color}">${realmArt(world.id)}<strong>${world.shortName}</strong></article>`).join("")}
+      </div>
+    </section>
+  </main>`;
+}
+
+function showcaseScreen() {
+  return `${header()}<main id="main" class="showcase-shell" tabindex="-1">
+    <button class="back-button" data-action="exit-showcase">← Back to adventure</button>
+    <section class="showcase-intro">
+      <div><h1>Four realms. Four quick challenges.</h1><p>Sample one representative level from every world. Your campaign stars, unlocks, and saved progress will stay exactly as they are.</p>
+        <button class="primary-button" data-action="begin-showcase">Begin showcase ${icon("arrow")}</button>
+      </div>
+      <ol class="showcase-route">
+        ${SHOWCASE_LEVEL_IDS.map((id, index) => { const level = levelById(id); const world = worldById(level.worldId); return `<li style="--realm:${world.color}"><span>${index + 1}</span><div><strong>${world.shortName}</strong><small>${level.skill}</small></div></li>`; }).join("")}
+      </ol>
+    </section>
+  </main>`;
+}
+
 function levelStars(levelId) {
   const count = progress.starsByLevel[levelId] || 0;
   return `<span class="node-stars" aria-label="${count} stars">${"★".repeat(count)}${"☆".repeat(3 - count)}</span>`;
@@ -134,13 +181,20 @@ function levelStars(levelId) {
 function mapScreen() {
   const selected = levelById(currentLevelId) || LEVELS[0];
   const selectedWorld = worldById(selected.worldId);
+  const completedTotal = progress.completedLevelIds.length;
   return `
     ${header()}
-    <main id="main" class="map-shell">
+    <main id="main" class="map-shell" tabindex="-1">
       <div class="map-heading">
         <div><h1>Choose your path</h1><p>Master every challenge to restore the four realms.</p></div>
-        <div class="journey-progress"><span>${progress.completedLevelIds.length} / 20 levels</span><div><i style="width:${progress.completedLevelIds.length / 20 * 100}%"></i></div></div>
+        <div class="map-heading-actions"><button class="secondary-button" data-action="open-showcase">Judge showcase</button><button class="secondary-button mobile-reset" data-action="reset">Reset adventure</button></div>
       </div>
+      <section class="mastery-dashboard" aria-label="Learning progress">
+        <div class="mastery-overall"><span>Adventure mastery</span><strong>${Math.round(completedTotal / LEVELS.length * 100)}%</strong><div role="progressbar" aria-label="Overall adventure mastery" aria-valuemin="0" aria-valuemax="20" aria-valuenow="${completedTotal}"><i style="width:${completedTotal / LEVELS.length * 100}%"></i></div><small>${completedTotal} of 20 challenges · ${totalStars(progress)} of 60 stars</small></div>
+        <div class="realm-mastery">
+          ${WORLDS.map((world) => { const complete = levelsForWorld(world.id).filter((level) => progress.completedLevelIds.includes(level.id)).length; return `<div style="--realm:${world.color}"><span>${world.shortName}</span><div role="progressbar" aria-label="${world.shortName} mastery" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${complete}"><i style="width:${complete / 5 * 100}%"></i></div><strong>${complete === 5 ? "Restored" : `${complete}/5`}</strong></div>`; }).join("")}
+        </div>
+      </section>
       <section class="realm-map" aria-label="Four mathematical realms">
         ${WORLDS.map((world, worldIndex) => {
           const levels = levelsForWorld(world.id);
@@ -160,7 +214,7 @@ function mapScreen() {
                 </button>`;
               }).join("")}
             </div>
-            ${!unlocked ? `<div class="realm-lock">${icon("lock")}<span>Complete the previous realm</span></div>` : `<div class="realm-count">${completedCount} / 5 complete</div>`}
+            ${!unlocked ? `<div class="realm-lock">${icon("lock")}<span>Complete the previous realm</span></div>` : `<div class="realm-count">${completedCount === 5 ? "✓ Realm restored" : `${completedCount} / 5 complete`}</div>`}
           </article>`;
         }).join("")}
       </section>
@@ -183,8 +237,8 @@ function sceneIllustration(level) {
 
 function introScreen(level) {
   const world = worldById(level.worldId);
-  return `${header()}<main id="main" class="stage-shell" style="--realm:${world.color}">
-    <button class="back-button" data-action="go-map">← World map</button>
+  return `${header()}${showcaseBanner()}<main id="main" class="stage-shell" tabindex="-1" style="--realm:${world.color}">
+    <button class="back-button" data-action="${showcaseMode ? "exit-showcase" : "go-map"}">← ${showcaseMode ? "Exit showcase" : "World map"}</button>
     <section class="briefing-panel">
       <div class="briefing-copy"><span>${world.name} · Level ${level.number}</span><h1>${level.title}</h1><p>${level.prompt}</p>
         <button class="primary-button" data-action="begin-level">Enter challenge ${icon("arrow")}</button>
@@ -234,12 +288,13 @@ function interactionMarkup(level) {
 
 function playingScreen(level) {
   const world = worldById(level.worldId);
-  return `${header()}<main id="main" class="play-shell" style="--realm:${world.color}">
-    <div class="play-status"><button class="back-button" data-action="go-map">← Leave level</button><span>${world.name}</span><div class="level-dots">${levelsForWorld(world.id).map((item) => `<i class="${progress.completedLevelIds.includes(item.id) ? "done" : item.id === level.id ? "current" : ""}"></i>`).join("")}</div></div>
+  const pathIds = showcaseMode ? SHOWCASE_LEVEL_IDS : levelsForWorld(world.id).map((item) => item.id);
+  return `${header()}${showcaseBanner()}<main id="main" class="play-shell" tabindex="-1" style="--realm:${world.color}">
+    <div class="play-status"><button class="back-button" data-action="${showcaseMode ? "exit-showcase" : "go-map"}">← ${showcaseMode ? "Exit showcase" : "Leave level"}</button><span>${world.name}</span><div class="level-dots">${pathIds.map((id) => `<i class="${showcaseMode && SHOWCASE_LEVEL_IDS.indexOf(id) < showcaseIndex ? "done" : id === level.id ? "current" : !showcaseMode && progress.completedLevelIds.includes(id) ? "done" : ""}"></i>`).join("")}</div></div>
     <section class="play-layout">
       ${sceneIllustration(level)}
       <div class="challenge-panel">
-        <div class="challenge-heading"><span>Level ${level.number} of 5</span><h1>${level.title}</h1><p>${level.prompt}</p></div>
+        <div class="challenge-heading"><span>${showcaseMode ? `Showcase ${showcaseIndex + 1} of 4` : `Level ${level.number} of 5`}</span><h1>${level.title}</h1><p>${level.prompt}</p></div>
         ${interactionMarkup(level)}
         ${attempts ? `<p class="attempt-note">Attempt ${attempts + 1} · A correct answer now earns ${scoreForAttempt(attempts + 1)} ${scoreForAttempt(attempts + 1) === 1 ? "star" : "stars"}.</p>` : ""}
       </div>
@@ -249,7 +304,7 @@ function playingScreen(level) {
 
 function feedbackScreen(level) {
   const world = worldById(level.worldId);
-  return `${header()}<main id="main" class="feedback-shell" style="--realm:${world.color}">
+  return `${header()}${showcaseBanner()}<main id="main" class="feedback-shell" tabindex="-1" style="--realm:${world.color}">
     <section class="feedback-panel is-wrong">
       <div class="feedback-symbol" aria-hidden="true">?</div>
       <span>Not quite yet</span><h1>The realm left you a clue</h1>
@@ -263,19 +318,28 @@ function feedbackScreen(level) {
 function completeScreen(level) {
   const world = worldById(level.worldId);
   const stars = feedback?.stars || progress.starsByLevel[level.id] || 1;
-  const allComplete = isGameComplete(progress);
-  const nextId = nextLevelId(level.id);
-  return `${header()}<main id="main" class="feedback-shell ${allComplete ? "finale" : ""}" style="--realm:${world.color}">
+  const allComplete = !showcaseMode && isGameComplete(progress);
+  const nextId = showcaseMode ? SHOWCASE_LEVEL_IDS[showcaseIndex + 1] : nextLevelId(level.id);
+  const nextLevel = levelById(nextId);
+  const showcaseComplete = showcaseMode && !nextId;
+  const unlockMessage = showcaseMode
+    ? "Showcase result only · Your campaign progress is unchanged."
+    : nextLevel
+      ? `${nextLevel.worldId !== level.worldId ? `New realm unlocked: ${worldById(nextLevel.worldId).name}` : "Next challenge unlocked"}: ${nextLevel.title}`
+      : "Every challenge is complete.";
+  return `${header()}${showcaseBanner()}<main id="main" class="feedback-shell ${allComplete || showcaseComplete ? "finale" : ""}" tabindex="-1" style="--realm:${world.color}">
     <div class="spark-field" aria-hidden="true">${Array.from({ length: 16 }, (_, i) => `<i style="--i:${i}">✦</i>`).join("")}</div>
     <section class="feedback-panel is-correct">
       <div class="feedback-symbol" aria-hidden="true">${allComplete ? "♛" : "✓"}</div>
-      <span>${allComplete ? "All four realms restored" : "Challenge complete"}</span>
-      <h1>${allComplete ? "You are a MathQuest Champion" : level.title + " unlocked"}</h1>
-      <div class="earned-stars" aria-label="${stars} stars earned">${"★".repeat(stars)}${"☆".repeat(3 - stars)}</div>
+      <span>${allComplete ? "All four realms restored" : showcaseComplete ? "Showcase complete" : "Challenge complete"}</span>
+      <h1>${allComplete ? "You are a MathQuest Champion" : showcaseComplete ? "You explored all four realms" : level.title + " conquered"}</h1>
+      <div class="earned-stars" aria-label="${stars} ${showcaseMode ? "practice stars" : "stars earned"}">${"★".repeat(stars)}${"☆".repeat(3 - stars)}</div>
       <p>${level.explanation}</p>
+      <div class="skill-takeaway"><span>${showcaseMode ? "Skill demonstrated" : "Skill mastered"}</span><strong>${level.skill}</strong></div>
+      <p class="unlock-note">${unlockMessage}</p>
       <div class="complete-actions">
-        ${allComplete ? `<button class="primary-button" data-action="print">Print certificate</button>` : nextId ? `<button class="primary-button" data-action="next-level" data-level="${nextId}">Next challenge ${icon("arrow")}</button>` : ""}
-        <button class="secondary-button" data-action="go-map">World map</button>
+        ${allComplete ? `<button class="primary-button" data-action="print">Print certificate</button>` : showcaseComplete ? `<button class="primary-button" data-action="exit-showcase">Return to adventure ${icon("arrow")}</button>` : nextId ? `<button class="primary-button" data-action="${showcaseMode ? "next-showcase" : "next-level"}" data-level="${nextId}">${showcaseMode ? "Next realm" : "Next challenge"} ${icon("arrow")}</button>` : ""}
+        ${showcaseComplete ? "" : `<button class="secondary-button" data-action="${showcaseMode ? "exit-showcase" : "go-map"}">${showcaseMode ? "Exit showcase" : "World map"}</button>`}
       </div>
     </section>
     ${allComplete ? `<section class="certificate" aria-label="Completion certificate"><span>Certificate of completion</span><h2>MathQuest: Four Realms</h2><p>This certifies that a brave explorer restored all four mathematical realms and completed 20 challenges.</p><strong>${totalStars(progress)} / 60 stars</strong></section>` : ""}
@@ -284,18 +348,25 @@ function completeScreen(level) {
 
 function render({ focus = false } = {}) {
   const level = levelById(currentLevelId) || LEVELS[0];
+  if (view === "welcome") app.innerHTML = welcomeScreen();
+  if (view === "showcase") app.innerHTML = showcaseScreen();
   if (view === "map") app.innerHTML = mapScreen();
   if (view === "intro") app.innerHTML = introScreen(level);
   if (view === "playing") app.innerHTML = playingScreen(level);
   if (view === "feedback") app.innerHTML = feedbackScreen(level);
   if (view === "complete") app.innerHTML = completeScreen(level);
   document.body.classList.toggle("reduce-motion", progress.reducedMotion);
-  if (focus) app.querySelector("h1, .primary-button, input")?.focus({ preventScroll: true });
+  if (focus) {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    const focusTarget = app.querySelector("h1, .primary-button, input");
+    if (focusTarget?.matches("h1")) focusTarget.tabIndex = -1;
+    focusTarget?.focus({ preventScroll: true });
+  }
 }
 
 function startLevel(levelId, screen = "intro") {
   const level = levelById(levelId);
-  if (!level || !isLevelUnlocked(levelId, progress.completedLevelIds)) return;
+  if (!level || (!showcaseMode && !isLevelUnlocked(levelId, progress.completedLevelIds))) return;
   currentLevelId = levelId;
   attempts = 0;
   selectedChoice = "";
@@ -311,12 +382,15 @@ function submitCurrentAnswer(answer) {
   attempts += 1;
   if (validateAnswer(level, answer)) {
     const stars = scoreForAttempt(attempts);
-    progress = completeLevel(progress, level.id, stars);
-    persist();
+    const completedProgress = completionForMode(progress, level.id, stars, showcaseMode);
+    if (!showcaseMode) {
+      progress = completedProgress;
+      persist();
+    }
     feedback = { correct: true, stars };
     view = "complete";
     playTone(true);
-    announce(`Correct. ${stars} stars earned. ${level.explanation}`);
+    announce(`Correct. ${showcaseMode ? `Practice rating: ${stars} stars.` : `${stars} campaign stars earned.`} ${level.explanation}${showcaseMode ? " Campaign progress was not changed." : ""}`);
   } else {
     feedback = { correct: false };
     view = "feedback";
@@ -330,9 +404,35 @@ app.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   const action = button.dataset.action;
-  if (action === "go-map") {
+  if (action === "start-adventure") {
+    showcaseMode = false;
     view = "map";
-    currentLevelId = suggestedLevelId();
+    render({ focus: true });
+  }
+  if (action === "open-showcase") {
+    campaignLevelIdBeforeShowcase = currentLevelId;
+    showcaseMode = false;
+    view = "showcase";
+    render({ focus: true });
+  }
+  if (action === "begin-showcase") {
+    showcaseMode = true;
+    showcaseIndex = 0;
+    startLevel(SHOWCASE_LEVEL_IDS[showcaseIndex]);
+  }
+  if (action === "exit-showcase") {
+    showcaseMode = false;
+    showcaseIndex = 0;
+    currentLevelId = campaignLevelIdBeforeShowcase;
+    view = "map";
+    render({ focus: true });
+    announce("Showcase closed. Campaign progress was not changed.");
+  }
+  if (action === "go-map") {
+    const returnLevelId = showcaseMode ? campaignLevelIdBeforeShowcase : suggestedLevelId();
+    showcaseMode = false;
+    view = "map";
+    currentLevelId = returnLevelId;
     render({ focus: true });
   }
   if (action === "select-level") {
@@ -363,17 +463,21 @@ app.addEventListener("click", (event) => {
     render({ focus: true });
   }
   if (action === "next-level") startLevel(button.dataset.level);
+  if (action === "next-showcase") {
+    showcaseIndex += 1;
+    startLevel(button.dataset.level);
+  }
   if (action === "toggle-sound") {
     progress = { ...progress, soundEnabled: !progress.soundEnabled };
-    persist(); render(); announce(`Sound ${progress.soundEnabled ? "on" : "off"}.`);
+    persist(); render(); app.querySelector('[data-action="toggle-sound"]')?.focus(); announce(`Sound ${progress.soundEnabled ? "on" : "off"}.`);
   }
   if (action === "toggle-motion") {
     progress = { ...progress, reducedMotion: !progress.reducedMotion };
-    persist(); render(); announce(`Motion ${progress.reducedMotion ? "reduced" : "enabled"}.`);
+    persist(); render(); app.querySelector('[data-action="toggle-motion"]')?.focus(); announce(`Motion ${progress.reducedMotion ? "reduced" : "enabled"}.`);
   }
   if (action === "reset" && window.confirm("Reset all MathQuest progress and stars?")) {
     progress = createDefaultProgress();
-    persist(); currentLevelId = LEVELS[0].id; view = "map"; render({ focus: true }); announce("Adventure reset.");
+    persist(); showcaseMode = false; currentLevelId = LEVELS[0].id; view = "welcome"; render({ focus: true }); announce("Adventure reset.");
   }
   if (action === "print") window.print();
 });

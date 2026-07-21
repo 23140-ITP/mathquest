@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LEVELS, WORLDS } from "../levels.js";
+import { LEVELS, SHOWCASE_LEVEL_IDS, WORLDS } from "../levels.js";
 import {
   STORAGE_KEY,
   completeLevel,
+  completionForMode,
   createDefaultProgress,
   isGameComplete,
   isLevelUnlocked,
@@ -21,11 +22,29 @@ test("all twenty levels are complete, unique, and reference valid worlds", () =>
   const worldIds = new Set(WORLDS.map((world) => world.id));
   for (const level of LEVELS) {
     assert.ok(worldIds.has(level.worldId));
-    for (const key of ["id", "title", "prompt", "interaction", "answer", "hint", "explanation", "scene"]) {
+    for (const key of ["id", "title", "prompt", "interaction", "answer", "hint", "explanation", "scene", "skill"]) {
       assert.notEqual(level[key], undefined, `${level.id} is missing ${key}`);
     }
   }
   for (const world of WORLDS) assert.equal(LEVELS.filter((level) => level.worldId === world.id).length, 5);
+});
+
+test("showcase selects one valid level from every world", () => {
+  assert.equal(SHOWCASE_LEVEL_IDS.length, 4);
+  assert.equal(new Set(SHOWCASE_LEVEL_IDS).size, 4);
+  const showcaseLevels = SHOWCASE_LEVEL_IDS.map((id) => LEVELS.find((level) => level.id === id));
+  assert.ok(showcaseLevels.every(Boolean));
+  assert.deepEqual(showcaseLevels.map((level) => level.worldId), WORLDS.map((world) => world.id));
+});
+
+test("showcase completion leaves campaign progress unchanged", () => {
+  const progress = completeLevel(createDefaultProgress(), LEVELS[0].id, 2);
+  const snapshot = structuredClone(progress);
+  assert.deepEqual(completionForMode(progress, SHOWCASE_LEVEL_IDS[0], 3, true), snapshot);
+  assert.deepEqual(progress, snapshot);
+  const campaignResult = completionForMode(progress, LEVELS[1].id, 3, false);
+  assert.equal(campaignResult.completedLevelIds.includes(LEVELS[1].id), true);
+  assert.equal(campaignResult.starsByLevel[LEVELS[1].id], 3);
 });
 
 test("validates all three interaction types", () => {
