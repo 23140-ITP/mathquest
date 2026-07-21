@@ -4,7 +4,7 @@ export const WORLDS = [
     name: "Algebra Escape Room",
     shortName: "Algebra",
     description: "Crack five enchanted locks with equations.",
-    color: "#9b6cff",
+    color: "#1863dc",
     icon: "key",
   },
   {
@@ -12,7 +12,7 @@ export const WORLDS = [
     name: "Geometry Defense",
     shortName: "Geometry",
     description: "Restore the city shields with shape and measure.",
-    color: "#35d0c5",
+    color: "#007565",
     icon: "shield",
   },
   {
@@ -20,7 +20,7 @@ export const WORLDS = [
     name: "Coordinate Treasure Hunt",
     shortName: "Coordinates",
     description: "Plot a route across the cartographer's island.",
-    color: "#f4b942",
+    color: "#b8432b",
     icon: "compass",
   },
   {
@@ -28,7 +28,7 @@ export const WORLDS = [
     name: "Probability Dungeon",
     shortName: "Probability",
     description: "Outthink chance and defeat the dungeon keeper.",
-    color: "#ff6b72",
+    color: "#7e478b",
     icon: "dice",
   },
 ];
