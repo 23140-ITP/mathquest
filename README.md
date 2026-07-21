@@ -39,7 +39,7 @@ npm test
 
 Push the repository to GitHub, then open **Settings → Pages** and choose **Deploy from a branch**, branch `main`, folder `/ (root)`. The app uses only relative paths, so it works under a repository Pages URL.
 
-Live demo: add your GitHub Pages URL here before submission.
+Live demo: https://23140-itp.github.io/mathquest/
 
 ## Build Week notes
 
